@@ -2,7 +2,8 @@
 
 一个奶油纸质手账风格的打卡清单网站：100 件大学小事，可以逐件珍藏，也可以加自己的。
 
-在线访问：<https://workbuddy.link/p/gC6b8aycb9SydBacDPKfdr>
+- **GitHub Pages 访问**：<https://gubao-tian.github.io/college-100-things/>
+- **带云端数据同步的版本**：<https://workbuddy.link/p/gC6b8aycb9SydBacDPKfdr>
 
 ## 功能
 
@@ -28,6 +29,10 @@
 ## 本地预览
 
 直接用浏览器打开 `fix2_work/src/大学生该做的100件事.html` 即可。没有 SDK 时页面会走离线兜底模式，展示内置的 100 件小事。
+
+## 部署
+
+`main` 分支保存源码，`gh-pages` 分支保存构建产物（`index.html` + `.nojekyll`），由 GitHub Pages 托管。更新页面时把最新 HTML 复制为 `index.html` 推到 `gh-pages` 即可。
 
 ## 技术说明
 
