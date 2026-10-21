@@ -586,7 +586,7 @@ textarea.text-area:focus{border-color:var(--accent)}
     </div>
 
     <div data-page-node-id="tpBDiZUY99NlUT4G2BnD2K" class="photo-toolbar">
-      <select data-page-node-id="NkFvjB6gtvdux3ZkuBdGsp" aria-label="按分类筛选照片" class="sel" id="photoCatSel"><option data-page-node-id="GccUsdtX7YT6TjdGeRYRVY" value><!--pnid:OU47AnRY373uWAe8aXRNto-->全部分类</option></select>
+      <div class="chips" id="photoCatChips" role="group" aria-label="按分类筛选照片"></div>
       <span data-page-node-id="zqltwlQMAvQ4wIaAqrH65F" class="count-hint" id="photoHint" style="margin:0"></span>
     </div>
     <div data-page-node-id="IC9C0WPydQpRMWyZaUdeSS" id="photoWall"></div>
@@ -1210,15 +1210,14 @@ function renderPhotoWall(){
 }
 
 function renderPhotoCatOptions(){
-  var sel = $('photoCatSel');
+  var sel = $('photoCatChips');
   if (!sel) return;
-  var keep = sel.value;
-  var html = '<option value="">全部分类</option>';
-  for (var i = 0; i < state.cats.length; i++){
-    html += '<option value="' + esc(state.cats[i]) + '">' + esc(state.cats[i]) + '</option>';
+  var cats = allCats();
+  var html = '<button type="button" class="chip' + (state.photoCat ? '' : ' on') + '" data-pcat="">全部</button>';
+  for (var i = 0; i < cats.length; i++){
+    html += '<button type="button" class="chip' + (state.photoCat === cats[i] ? ' on' : '') + '" data-pcat="' + esc(cats[i]) + '">' + esc(cats[i]) + '</button>';
   }
   sel.innerHTML = html;
-  sel.value = keep;
 }
 
 /* 待收进手账的照片（拍照或相册选择后暂存） */
@@ -1830,9 +1829,13 @@ function bindPhotoEvents(){
     attachPendingPhoto(parseInt(t.getAttribute('data-no'), 10));
   });
 
-  var pcs = $('photoCatSel');
-  if (pcs) pcs.addEventListener('change', function(){
-    state.photoCat = this.value;
+  var pcs = $('photoCatChips');
+  if (pcs) pcs.addEventListener('click', function(e){
+    var t = e.target;
+    while (t && t !== this && t.getAttribute('data-pcat') === null) t = t.parentNode;
+    if (!t || t === this) return;
+    state.photoCat = t.getAttribute('data-pcat');
+    renderPhotoCatOptions();
     renderPhotoWall();
   });
 
