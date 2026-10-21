@@ -1139,7 +1139,7 @@ function renderTimeline(){
 function renderCatOptions(){
   var sel = $('catSel');
   var keep = sel.value;
-  var cats = state.cats.length ? state.cats : [];
+  var cats = allCats();
   var html = '<option value="">全部分类</option>';
   for (var i = 0; i < cats.length; i++){
     html += '<option value="' + esc(cats[i]) + '">' + esc(cats[i]) + '</option>';
@@ -1369,7 +1369,7 @@ function openCreate(preCat){
     mood: '',
     note: '',
     photos: [],
-    cat: preCat || state.catFilter || (state.cats[0] || '')
+    cat: preCat || state.catFilter || (allCats()[0] || '')
   };
 
   $('sheet').classList.add('creating');
@@ -1413,8 +1413,18 @@ function renderStatusChips(){
   $('statusChips').innerHTML = html;
 }
 
+/* 分类列表：schema 没加载到时用内置清单的分类兜底（离线 / 无 SDK 场景） */
+function allCats(){
+  if (state.cats.length) return state.cats;
+  var out = [];
+  for (var c in FALLBACK){
+    if (Object.prototype.hasOwnProperty.call(FALLBACK, c)) out.push(c);
+  }
+  return out;
+}
+
 function renderCatChips(){
-  var cats = state.cats.length ? state.cats : [];
+  var cats = allCats();
   var html = '';
   for (var i = 0; i < cats.length; i++){
     var c = cats[i];
@@ -1590,7 +1600,7 @@ function saveNew(d, props){
     if (state.rows[i].小事 === title){ toast('这件事已经在清单里了'); return; }
   }
 
-  var cat = d.cat || (state.cats[0] || '');
+  var cat = d.cat || (allCats()[0] || '');
   if (!cat){ toast('先选一个分类'); return; }
   var no = nextNo();
   var full = {
