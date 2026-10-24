@@ -694,7 +694,8 @@ var state = {
   editing: null,     // 正在编辑的行
   draft: null,       // 面板内的临时值
   uploading: false,
-  creating: false    // 是否处于「新建小事」模式
+  creating: false,   // 是否处于「新建小事」模式
+  saving: false      // 保存/添加请求进行中（防重复提交）
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -1535,6 +1536,7 @@ function uploadPhotos(files){
 function saveSheet(){
   if (!state.draft) return;
   if (!state.creating && !state.editing) return;
+  if (state.saving) return;   // 上一次提交还在进行中（Enter 连按 / 按钮双击防重）
   if (state.uploading){ toast('照片还在上传，稍等一下'); return; }
 
   var d = state.draft;
@@ -1547,10 +1549,12 @@ function saveSheet(){
   props['照片'] = {image: {images: d.photos}};
 
   if (state.creating){
+    state.saving = true;
     saveNew(d, props);
     return;
   }
 
+  state.saving = true;
   var row = state.editing;
   $('sheetSave').disabled = true;
   $('sheetSave').textContent = '保存中…';
@@ -1567,6 +1571,7 @@ function saveSheet(){
     row.照片 = d.photos.slice();
     cacheSave(state.rows);
     setSync('ok');
+    state.saving = false;
     $('sheetSave').disabled = false;
     $('sheetSave').textContent = '保存';
     closeSheet();
@@ -1574,6 +1579,7 @@ function saveSheet(){
     toast(d.status === '已经珍藏' ? '已珍藏这一件' : '已保存');
   }).catch(function(err){
     setSync('offline');
+    state.saving = false;
     $('sheetSave').disabled = false;
     $('sheetSave').textContent = '保存';
     toast('保存没成功，请检查网络后重试');
@@ -1636,6 +1642,7 @@ function saveNew(d, props){
     });
     cacheSave(state.rows);
     setSync('ok');
+    state.saving = false;
     $('sheetSave').disabled = false;
     $('sheetSave').textContent = '添加';
     closeSheet();
@@ -1645,6 +1652,7 @@ function saveNew(d, props){
     setTimeout(function(){ fetchAll(0); }, 800);
   }).catch(function(err){
     setSync('offline');
+    state.saving = false;
     $('sheetSave').disabled = false;
     $('sheetSave').textContent = '添加';
     toast('添加没成功，请检查网络后重试');
@@ -1704,7 +1712,11 @@ function bindEvents(){
   $('sheetSave').addEventListener('click', saveSheet);
   $('btnAdd').addEventListener('click', function(){ openCreate(); });
   $('fTitle').addEventListener('keydown', function(e){
-    if (e.key === 'Enter'){ e.preventDefault(); saveSheet(); }
+    // 中文输入法选词的 Enter（isComposing / keyCode 229）不能触发提交
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229){
+      e.preventDefault();
+      saveSheet();
+    }
   });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && $('sheet').classList.contains('on')) closeSheet();
